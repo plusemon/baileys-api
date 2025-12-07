@@ -1,18 +1,23 @@
+import response from '../response.js'
 import {
-    getSession,
-    getChatList,
-    isExists,
-    sendMessage,
-    formatPhone,
+    compareAndFilter,
+    fileExists,
+    isUrlValid,
+} from '../utils/functions.js'
+import logger from '../utils/logger.js'
+import {
     formatGroup,
-    readMessage,
-    readConversation,
-    getMessageMedia,
+    formatPhone,
+    getChatList,
     getMessageBuffer,
+    getMessageMedia,
+    getSession,
     getStoreMessage,
-} from './../whatsapp.js'
-import response from './../response.js'
-import { compareAndFilter, fileExists, isUrlValid } from './../utils/functions.js'
+    isExists,
+    readConversation,
+    readMessage,
+    sendMessage,
+} from '../whatsapp.js'
 
 const getList = async (req, res) => {
     const { limit = 20, cursor = null } = req.query
@@ -22,6 +27,7 @@ const getList = async (req, res) => {
         const result = await getChatList(sessionId, false, parseInt(limit), cursor)
         return response(res, 200, true, '', result)
     } catch (error) {
+        logger.error(`Error getting chat list for session ${sessionId}: ${error.message}`)
         return response(res, 500, false, 'Failed to load chats.')
     }
 }
@@ -62,6 +68,7 @@ const send = async (req, res) => {
             message: result,
         })
     } catch (error) {
+        logger.error(`Error sending message: ${error.message}`)
         response(res, 500, false, 'Failed to send the message.', error)
     }
 }
@@ -94,6 +101,7 @@ const sendBulk = async (req, res) => {
 
             await sendMessage(session, receiver, message, {}, delay)
         } catch (err) {
+            logger.error(`Error sending message: ${err.message}`)
             errors.push({ key, message: err.message })
         }
     }
@@ -123,6 +131,7 @@ const deleteChat = async (req, res) => {
         await sendMessage(session, jidFormat, { delete: message })
         response(res, 200, true, 'Message has been successfully deleted.')
     } catch {
+        logger.error(`Error deleting message for session ${res.locals.sessionId}`)
         response(res, 500, false, 'Failed to delete message .')
     }
 }
@@ -150,6 +159,7 @@ const forward = async (req, res) => {
 
         response(res, 200, true, 'The message has been successfully forwarded.')
     } catch {
+        logger.error(`Error forwarding message for session ${res.locals.sessionId}`)
         response(res, 500, false, 'Failed to forward the message.')
     }
 }
@@ -167,6 +177,7 @@ const read = async (req, res) => {
 
         response(res, 200, true, 'The message has been successfully marked as read.')
     } catch {
+        logger.error(`Error marking message as read for session ${res.locals.sessionId}`)
         response(res, 500, false, 'Failed to mark the message as read.')
     }
 }
@@ -182,6 +193,7 @@ const markConversationAsRead = async (req, res) => {
             markedCount: result.markedCount
         })
     } catch (error) {
+        logger.error(`Error marking conversation as read for session ${sessionId}: ${error.message}`)
         response(res, 500, false, 'Failed to mark the conversation as read.')
     }
 }
@@ -197,6 +209,7 @@ const sendPresence = async (req, res) => {
 
         response(res, 200, true, 'Presence has been successfully sent.')
     } catch {
+        logger.error(`Error sending presence for session ${res.locals.sessionId}`)
         response(res, 500, false, 'Failed to send presence.')
     }
 }
@@ -211,6 +224,7 @@ const downloadMedia = async (req, res) => {
 
         response(res, 200, true, 'Message downloaded successfully', dataMessage)
     } catch {
+        logger.error(`Error downloading multimedia message for session ${res.locals.sessionId}`)
         response(
             res,
             500,
@@ -241,4 +255,15 @@ const downloadMediaBuffer = async (req, res) => {
     }
 }
 
-export { getList, send, sendBulk, deleteChat, read, markConversationAsRead, forward, sendPresence, downloadMedia, downloadMediaBuffer }
+export {
+    deleteChat,
+    downloadMedia,
+    downloadMediaBuffer,
+    forward,
+    getList,
+    markConversationAsRead,
+    read,
+    send,
+    sendBulk,
+    sendPresence,
+}

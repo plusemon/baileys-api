@@ -112,7 +112,7 @@ const shareStory = async (req, res) => {
     }
     if (receiver === 'all_contacts') {
         const contacts = session.store.getContactList('saved')
-        
+
         if (contacts.length === 0) {
             return response(res, 400, false, 'No contacts found.');
         }
@@ -174,6 +174,17 @@ const shareStory = async (req, res) => {
     }
 };
 
+const checkOnWhatsApp = async (req, res) => {
+    try {
+        const session = getSession(res.locals.sessionId)
+        const { jid } = req.body
+        const jidFormat = formatPhone(jid)
+        const onWhatsApp = await session.onWhatsApp(jidFormat)
+        response(res, 200, true, 'The contact has been checked successfully', onWhatsApp)
+    } catch {
+        response(res, 500, false, 'Failed to check contact')
+    }
+}
 
 
 export {
@@ -184,4 +195,5 @@ export {
     getProfilePictureUser,
     blockAndUnblockContact,
     shareStory,
+    checkOnWhatsApp
 }
